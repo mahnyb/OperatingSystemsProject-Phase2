@@ -1,0 +1,18 @@
+CSE 331 Project Phase 2 Roadmap:
+
+1) Implement the ticket system where each process is assigned tickets upon creation (in fork() ).
+
+2) Implement the lottery scheduling logic in kernel/sched.c
+
+3) Implement the ticket assingnment logic 
+
+4) Add a system call "set_lottery_scheduler(bool enabled)" in which when it is called with the parameter "true", 
+   it will switch to using the lottery scheduler. When it is called with "false", it should revert to default scheduling policy.
+ 
+5) Make sure that when lottery scheduler is active, sched_setscheduler() system call is rendered ineffective 
+
+6) Do test runs to test the code
+
+7) Perform an analysis by running a CPU intensive program in both lottery scheduler and the default schedulers.
+
+8) Write a report
