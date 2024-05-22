@@ -308,7 +308,8 @@ struct task_struct {
 	struct mm_struct *mm;
 	int processor;
 
-	int ticket = 5; // Initial assigned ticket count for each process
+	int tickets; // Initial assigned ticket count for each process
+	unsigned long last_cpu_time; // Last time the process was on the CPU
 
 	/*
 	 * cpus_runnable is ~0 if the process is not running on any

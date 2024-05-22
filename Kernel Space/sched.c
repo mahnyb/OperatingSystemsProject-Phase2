@@ -48,6 +48,23 @@ extern void mem_use(void);
 // Global variable for setting the lottery scheduler
 int sched_lottery = 0; // it is disabled by default
 
+void update_tickets(struct task_struct *p) {
+    unsigned long current_time = jiffies;
+    unsigned long time_diff = current_time - p->last_cpu_time;
+
+    if (time_diff <= 10) {
+        if (p->tickets > 1) {
+            p->tickets--;
+        }
+    } else if (time_diff > 100) {
+        if (p->tickets < 10) {
+            p->tickets++;
+        }
+    }
+
+    p->last_cpu_time = current_time;
+}
+
 /*
  * Scheduling quanta.
  *
@@ -606,12 +623,33 @@ repeat_schedule:
 	 * Default process to select..
 	 */
 
-	if (sched_lottery == 1){
-		// lottery algorithm:
-
+	if (sched_lottery == 1){ // lottery algorithm
+		
+		int total_tickets = 0;
+		int random_icket;
 		// 1) list_for_each: runnable process list
+		list_for_each(tmp, &runqueue_head){
+			p = list_entry(tmp, struct task_struct, run_list);
+			if (can_schedule(p, this_cpu)) {
+				update_tickets(p); // updating tickets based on the elapsed time
+				total_tickets += p->tickets;
+			}
+		}
 		// 2) find a random number between 0 to total ticket number
+		get_random_bytes(&random_ticket, sizeof(random_ticket));
+        random_ticket = random_ticket % total_tickets;
+
 		// 3) use a step value (step = 0) to find the process which the random number belongs to
+		list_for_each(tmp, &runqueue_head) {
+            p = list_entry(tmp, struct task_struct, run_list);
+            if (can_schedule(p, this_cpu)) {
+                step += p->tickets; // Increment by the number of tickets of the current process
+                if (step > random_ticket) {
+                    next = p;
+                    break;
+                }
+            }
+        }
 
 	}
 	else{
