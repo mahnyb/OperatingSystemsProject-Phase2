@@ -739,9 +739,9 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	p->lock_depth = -1;		/* -1 = no lock */
 	p->start_time = jiffies;
 
-	// Initialize lottery scheduler fields
+	// Initializes lottery scheduler 
     p->tickets = 5; // Initial tickets 
-	p->last_cpu_time = jiffies; // Initialize the last CPU time
+	p->last_cpu_time = jiffies; // Initializs last CPU time
 
 
 	INIT_LIST_HEAD(&p->local_pages);
