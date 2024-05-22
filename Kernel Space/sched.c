@@ -45,6 +45,9 @@ unsigned securebits = SECUREBITS_DEFAULT; /* systemwide security settings */
 
 extern void mem_use(void);
 
+// Global variable for setting the lottery scheduler
+int sched_lottery = 0; // it is disabled by default
+
 /*
  * Scheduling quanta.
  *
@@ -599,30 +602,43 @@ need_resched_back:
 
 repeat_schedule:
 	/*
+
 	 * Default process to select..
 	 */
-	next = idle_task(this_cpu);
-	c = -1000;
-	list_for_each(tmp, &runqueue_head) {
-		p = list_entry(tmp, struct task_struct, run_list);
-		if (can_schedule(p, this_cpu)) {
-			int weight = goodness(p, this_cpu, prev->active_mm);
-			if (weight > c)
-				c = weight, next = p;
-		}
+
+	if (sched_lottery == 1){
+		// lottery algorithm:
+
+		// 1) list_for_each: runnable process list
+		// 2) find a random number between 0 to total ticket number
+		// 3) use a step value (step = 0) to find the process which the random number belongs to
+
 	}
+	else{
+		// default scheduler goes here
+		next = idle_task(this_cpu);
+		c = -1000;
+		list_for_each(tmp, &runqueue_head) {
+			p = list_entry(tmp, struct task_struct, run_list);
+			if (can_schedule(p, this_cpu)) {
+				int weight = goodness(p, this_cpu, prev->active_mm);
+				if (weight > c)
+					c = weight, next = p;
+			}
+		}
 
-	/* Do we need to re-calculate counters? */
-	if (unlikely(!c)) {
-		struct task_struct *p;
+		/* Do we need to re-calculate counters? */
+		if (unlikely(!c)) {
+			struct task_struct *p;
 
-		spin_unlock_irq(&runqueue_lock);
-		read_lock(&tasklist_lock);
-		for_each_task(p)
-			p->counter = (p->counter >> 1) + NICE_TO_TICKS(p->nice);
-		read_unlock(&tasklist_lock);
-		spin_lock_irq(&runqueue_lock);
-		goto repeat_schedule;
+			spin_unlock_irq(&runqueue_lock);
+			read_lock(&tasklist_lock);
+			for_each_task(p)
+				p->counter = (p->counter >> 1) + NICE_TO_TICKS(p->nice);
+			read_unlock(&tasklist_lock);
+			spin_lock_irq(&runqueue_lock);
+			goto repeat_schedule;
+		}
 	}
 
 	/*

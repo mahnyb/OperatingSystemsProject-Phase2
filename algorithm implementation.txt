@@ -1,0 +1,3 @@
+// 1) list_for_each: runnable process list
+// 2) find a random number between 0 to total ticket number
+// 3) use a step value (step = 0) to find the process which the random number belongs to

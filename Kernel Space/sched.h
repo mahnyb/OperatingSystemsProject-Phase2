@@ -124,7 +124,7 @@ struct completion;
 #ifdef __KERNEL__
 
 #include <linux/spinlock.h>
-
+// task_struct -> ticket
 /*
  * This serializes "schedule()" and also protects
  * the run-queue from deletions/modifications (but
@@ -307,6 +307,9 @@ struct task_struct {
 	unsigned long policy;
 	struct mm_struct *mm;
 	int processor;
+
+	int ticket = 5; // Initial assigned ticket count for each process
+
 	/*
 	 * cpus_runnable is ~0 if the process is not running on any
 	 * CPU. It's (1 << cpu) if it's running on a CPU. This mask
