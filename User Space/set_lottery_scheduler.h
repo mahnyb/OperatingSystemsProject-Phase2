@@ -4,4 +4,4 @@
 #include <errno.h>
 extern int errno;
 
-_syscall1(int, sey_lottery_scheduler, int, enabled);
+_syscall1(int, set_lottery_scheduler, int, enabled);

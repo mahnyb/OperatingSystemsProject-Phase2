@@ -29,7 +29,7 @@
 #include <linux/completion.h>
 #include <linux/prefetch.h>
 #include <linux/compiler.h>
-
+#include <linux/random.h> 
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
 
@@ -626,7 +626,9 @@ repeat_schedule:
 	if (sched_lottery == 1){ // lottery algorithm
 		
 		int total_tickets = 0;
-		int random_icket;
+		unsigned int random_ticket;
+		int step = 0;
+
 		// 1) list_for_each: runnable process list
 		list_for_each(tmp, &runqueue_head){
 			p = list_entry(tmp, struct task_struct, run_list);
@@ -635,21 +637,26 @@ repeat_schedule:
 				total_tickets += p->tickets;
 			}
 		}
-		// 2) find a random number between 0 to total ticket number
-		get_random_bytes(&random_ticket, sizeof(random_ticket));
-        random_ticket = random_ticket % total_tickets;
+		// Prevent division by zero
+        if (total_tickets > 0) {
+            // 2) find a random number between 0 to total ticket number
+            get_random_bytes(&random_ticket, sizeof(random_ticket));
+            random_ticket = random_ticket % total_tickets;
 
-		// 3) use a step value (step = 0) to find the process which the random number belongs to
-		list_for_each(tmp, &runqueue_head) {
-            p = list_entry(tmp, struct task_struct, run_list);
-            if (can_schedule(p, this_cpu)) {
-                step += p->tickets; // Increment by the number of tickets of the current process
-                if (step > random_ticket) {
-                    next = p;
-                    break;
+            printk("Random ticket: %d\n", random_ticket);
+
+            // 3) use a step value (step = 0) to find the process which the random number belongs to
+            list_for_each(tmp, &runqueue_head) {
+                p = list_entry(tmp, struct task_struct, run_list);
+                if (can_schedule(p, this_cpu)) {
+                    step += p->tickets; // Increment by the number of tickets of the current process
+                    if (step > random_ticket) {
+                        next = p;
+                        break;
+                    }
                 }
             }
-        }
+        } 
 
 	}
 	else{
