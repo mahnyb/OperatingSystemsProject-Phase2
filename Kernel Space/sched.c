@@ -661,6 +661,10 @@ repeat_schedule:
                     }
                 }
             }
+			if (!next) {
+    			printk("No process selected, return to idle task.\n");
+    			next = idle_task(this_cpu);
+			}
         }
 		else {
             printk("No runnable processes with tickets\n");
