@@ -125,6 +125,8 @@ struct completion;
 
 #include <linux/spinlock.h>
 // task_struct -> ticket
+// Global variable for the lottery scheduler
+extern int sched_lottery;  // Declaration of the global variable
 /*
  * This serializes "schedule()" and also protects
  * the run-queue from deletions/modifications (but

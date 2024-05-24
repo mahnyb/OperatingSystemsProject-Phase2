@@ -4,6 +4,6 @@
 #define __LINUX_SET_LOTTERY_SCHEDULER_H
 #include <linux/linkage.h>
 
-// Add stuff here
+extern asmlinkage int sys_set_lottery_scheduler(int enabled);
 
 #endif

@@ -56,7 +56,8 @@ void update_tickets(struct task_struct *p) {
         if (p->tickets > 1) {
             p->tickets--;
         }
-    } else if (time_diff > 100) {
+    }
+	else if (time_diff > 100) {
         if (p->tickets < 10) {
             p->tickets++;
         }
@@ -638,11 +639,11 @@ repeat_schedule:
 			}
 		}
 
-		printk("Total tickets: %d\n", total_tickets);
+		printk("\nTotal tickets: %d\n", total_tickets);
 		// Prevent division by zero
         if (total_tickets > 0) {
             // 2) find a random number between 0 to total ticket number
-            get_random_bytes(&random_ticket, sizeof(random_ticket));
+            get_random_bytes(&random_ticket, 4);
             random_ticket = random_ticket % total_tickets;
 
             printk("Random ticket: %d\n", random_ticket);
@@ -652,6 +653,7 @@ repeat_schedule:
                 p = list_entry(tmp, struct task_struct, run_list);
                 if (can_schedule(p, this_cpu)) {
                     step += p->tickets; // Increment by the number of tickets of the current process
+					printk("Current step: %d, Process PID: %d, Tickets: %d\n", step, p->pid, p->tickets);
                     if (step > random_ticket) {
                         next = p;
 						printk("Selected process with PID: %d\n", next->pid);
