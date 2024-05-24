@@ -637,6 +637,8 @@ repeat_schedule:
 				total_tickets += p->tickets;
 			}
 		}
+
+		printk("Total tickets: %d\n", total_tickets);
 		// Prevent division by zero
         if (total_tickets > 0) {
             // 2) find a random number between 0 to total ticket number
@@ -652,11 +654,16 @@ repeat_schedule:
                     step += p->tickets; // Increment by the number of tickets of the current process
                     if (step > random_ticket) {
                         next = p;
+						printk("Selected process with PID: %d\n", next->pid);
                         break;
                     }
                 }
             }
-        } 
+        }
+		else {
+            printk("No runnable processes with tickets\n");
+            next = idle_task(this_cpu);
+        }
 
 	}
 	else{

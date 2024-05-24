@@ -28,7 +28,8 @@ void cpu_intensive_task(int task_number) {
     }
 
     clock_t start_time = clock();
-    for (long i = 0; i < 1e8; i++) {
+    long i = 0;
+    for (i ; i < 1000000; i++) {
         if (i % 10000000 == 0) {
             fprintf(file, "Task %d, progress: %ld%%\n", task_number, (i / 1000000) * 10);
         }
@@ -46,7 +47,8 @@ int main() {
     int num_tasks = 5; 
     pid_t pids[num_tasks];
 
-    for (int i = 0; i < num_tasks; i++) {
+    int i = 0
+    for (i; i < num_tasks; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
             // Child process
@@ -56,8 +58,9 @@ int main() {
     }
 
     // Parent process waits for all child processes to diee
-    for (int i = 0; i < num_tasks; i++) {
-        waitpid(pids[i], NULL, 0);
+    int j = 0;
+    for (j; i < num_tasks; j++) {
+        waitpid(pids[j], NULL, 0);
     }
 
     printf("All tasks completed. Check task_output_*.txt files for details.\n");
