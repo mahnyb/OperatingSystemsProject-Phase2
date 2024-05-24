@@ -635,6 +635,10 @@ repeat_schedule:
 			p = list_entry(tmp, struct task_struct, run_list);
 			if (can_schedule(p, this_cpu)) {
 				update_tickets(p); // updating tickets based on the elapsed time
+				if (p->tickets <= 0) {
+					printk("Resetting tickets for PID: %d\n", p->pid);
+					p->tickets = 5;  // Reset or adjust the ticket count appropriately
+				}
 				total_tickets += p->tickets;
 			}
 		}
