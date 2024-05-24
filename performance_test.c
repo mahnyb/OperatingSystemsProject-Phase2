@@ -47,7 +47,7 @@ int main() {
     int num_tasks = 5; 
     pid_t pids[num_tasks];
 
-    int i = 0
+    int i = 0;
     for (i; i < num_tasks; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
