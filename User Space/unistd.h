@@ -264,8 +264,7 @@
 #define __NR_epoll_wait		256
 #define __NR_remap_file_pages	257
 #define __NR_set_tid_address	258
-#define __NR_getInfoSpring2024	259
-#define __NR_set_lottery_scheduler	260
+#define __NR_set_lottery_scheduler	259
 
 /* user-visible error numbers are in the range -1 - -124: see <asm-i386/errno.h> */
 
