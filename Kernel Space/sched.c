@@ -48,23 +48,6 @@ extern void mem_use(void);
 // Global variable for setting the lottery scheduler
 int sched_lottery = 0; // it is disabled by default
 
-void update_tickets(struct task_struct *p) {
-    unsigned long current_time = jiffies;
-    unsigned long time_diff = current_time - p->last_cpu_time;
-
-    if (time_diff <= 10) {
-        if (p->tickets > 1) {
-            p->tickets--;
-        }
-    }
-	else if (time_diff > 100) {
-        if (p->tickets < 10) {
-            p->tickets++;
-        }
-    }
-
-    p->last_cpu_time = current_time;
-}
 
 /*
  * Scheduling quanta.
@@ -634,44 +617,53 @@ repeat_schedule:
 		list_for_each(tmp, &runqueue_head){
 			p = list_entry(tmp, struct task_struct, run_list);
 			if (can_schedule(p, this_cpu)) {
-				update_tickets(p); // updating tickets based on the elapsed time
-				if (p->tickets <= 0) {
-					printk("Resetting tickets for PID: %d\n", p->pid);
-					p->tickets = 5;  // Reset or adjust the ticket count appropriately
+				// updating tickets based on the elapsed time
+				unsigned long current_time = jiffies;
+				unsigned long time_diff = current_time - p->last_cpu_time;
+
+				if (time_diff <= 10) {
+					if (p->tickets > 1) {
+						p->tickets--;
+					}
 				}
+				else if (time_diff > 100) {
+					if (p->tickets < 10) {
+						p->tickets++;
+					}
+				}
+
+				p->last_cpu_time = current_time;
+
+
 				total_tickets += p->tickets;
 			}
 		}
 
-		printk("\nTotal tickets: %d\n", total_tickets);
+		//printk("\nTotal tickets: %d\n", total_tickets);
 		// Prevent division by zero
         if (total_tickets > 0) {
             // 2) find a random number between 0 to total ticket number
             get_random_bytes(&random_ticket, 4);
             random_ticket = random_ticket % total_tickets;
 
-            printk("Random ticket: %d\n", random_ticket);
+            //printk("Random ticket: %d\n", random_ticket);
 
             // 3) use a step value (step = 0) to find the process which the random number belongs to
             list_for_each(tmp, &runqueue_head) {
                 p = list_entry(tmp, struct task_struct, run_list);
                 if (can_schedule(p, this_cpu)) {
                     step += p->tickets; // Increment by the number of tickets of the current process
-					printk("Current step: %d, Process PID: %d, Tickets: %d\n", step, p->pid, p->tickets);
+					//printk("Current step: %d, Process PID: %d, Tickets: %d\n", step, p->pid, p->tickets);
                     if (step > random_ticket) {
                         next = p;
-						printk("Selected process with PID: %d\n", next->pid);
+						//printk("Selected process with PID: %d\n", next->pid);
                         break;
                     }
                 }
             }
-			if (!next) {
-    			printk("No process selected, return to idle task.\n");
-    			next = idle_task(this_cpu);
-			}
         }
 		else {
-            printk("No runnable processes with tickets\n");
+            //printk("No runnable processes with tickets\n");
             next = idle_task(this_cpu);
         }
 
