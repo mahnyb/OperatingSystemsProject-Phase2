@@ -1,78 +1,71 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <linux/set_lottery_scheduler.h>
 
-// Function to enable or disable the lottery scheduler
-void lottery_scheduler(int enabled) {
+void cpu_intensive_task() {
+    long i;
+    double result = 0.0;
+    for (i = 0; i < 100000000; i++) {
+        result = (i * 3.14 * 2.71) + (i % 10); 
+    }
+}
+
+double elapsed_time(struct timeval start, struct timeval end) {
+    double start_seconds = start.tv_sec + start.tv_usec / 1e6;
+    double end_seconds = end.tv_sec + end.tv_usec / 1e6;
+    return end_seconds - start_seconds;
+}
+
+void enable_lottery_scheduler() {
+    int enabled = 1;
     if (set_lottery_scheduler(enabled) != 0) {
         perror("set_lottery_scheduler");
         exit(EXIT_FAILURE);
     }
-    printf("Lottery scheduler %s\n", enabled ? "enabled" : "disabled");
-}
-
-// CPU-intensive task performed by each process
-void cpu_intensive_task() {
-    long i = 0;
-    volatile long result;  // Using volatile to prevent optimization
-    for (i; i < 100000000; i++) {
-        result = i % 123;  // Modulus operation
-    }
-}
-
-void print_time_difference(struct timespec *start, struct timespec *end) {
-    if (end->tv_nsec < start->tv_nsec) {
-        // Handle the nanoseconds rollover
-        end->tv_sec = end->tv_sec - start->tv_sec - 1;
-        end->tv_nsec = end->tv_nsec - start->tv_nsec + 1000000000;
-    } else {
-        end->tv_sec = end->tv_sec - start->tv_sec;
-        end->tv_nsec = end->tv_nsec - start->tv_nsec;
-    }
-    double time_in_seconds = end->tv_sec + end->tv_nsec * 1e9;
-    printf("Time taken: %.10f seconds\n", time_in_seconds);
+    printf("Lottery scheduler enabled\n");
 }
 
 int main() {
-    const int num_tasks = 10;
-    pid_t pids[num_tasks];
-    struct timespec start, end;
-    int i;
+    struct timeval start_time, end_time;
+    int i, status;
+    pid_t pid;
 
-    // Measure time with the default scheduler
-    lottery_scheduler(0);  // Disable lottery scheduler
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for (i = 0; i < num_tasks; i++) {
-        pids[i] = fork();
-        if (pids[i] == 0) { // Child process
+    printf("Testing default scheduler...\n");
+    gettimeofday(&start_time, NULL);
+
+    for (i = 0; i < 5; i++) {
+        pid = fork();
+        if (pid == 0) { // Child process
             cpu_intensive_task();
             exit(EXIT_SUCCESS);
         }
     }
-    for (i = 0; i < num_tasks; i++) {
-        waitpid(pids[i], NULL, 0);
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    print_time_difference(&start, &end);
 
-    // Enable lottery scheduler and measure time
-    lottery_scheduler(1);  // Enable lottery scheduler
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    for (i = 0; i < num_tasks; i++) {
-        pids[i] = fork();
-        if (pids[i] == 0) { // Child process
+    while (wait(&status) > 0); // Wait for all children to dieee
+
+    gettimeofday(&end_time, NULL);
+    printf("Default scheduler time: %f seconds\n", elapsed_time(start_time, end_time));
+
+    enable_lottery_scheduler();
+
+    printf("Testing lottery scheduler...\n");
+    gettimeofday(&start_time, NULL);
+
+    for (i = 0; i < 5; i++) {
+        pid = fork();
+        if (pid == 0) { // Child process
             cpu_intensive_task();
             exit(EXIT_SUCCESS);
         }
     }
-    for (i = 0; i < num_tasks; i++) {
-        waitpid(pids[i], NULL, 0);
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    print_time_difference(&start, &end);
+
+    while (wait(&status) > 0); // Wait for all children to diee
+
+    gettimeofday(&end_time, NULL);
+    printf("Lottery scheduler time: %f seconds\n", elapsed_time(start_time, end_time));
 
     return 0;
 }

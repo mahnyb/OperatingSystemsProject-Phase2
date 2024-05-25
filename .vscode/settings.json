@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "time.h": "c",
+        "stdio.h": "c"
+    }
+}
