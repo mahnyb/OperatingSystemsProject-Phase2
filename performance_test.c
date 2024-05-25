@@ -33,6 +33,8 @@ int main() {
     int i, status;
     pid_t pid;
 
+    set_lottery_scheduler(0);
+
     printf("Testing default scheduler...\n");
     gettimeofday(&start_time, NULL);
 
